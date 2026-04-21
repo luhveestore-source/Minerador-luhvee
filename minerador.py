@@ -1,106 +1,42 @@
-import cloudscraper
-from bs4 import BeautifulSoup
 import random
-import time
 
-scraper = cloudscraper.create_scraper()
-
-def buscar_ml(keyword):
-    url = f"https://lista.mercadolivre.com.br/{keyword}"
-
-    try:
-        r = scraper.get(url, timeout=10)
-    except:
-        return []
-
-    soup = BeautifulSoup(r.text, "lxml")
+def gerar_produtos_fake_inteligente():
+    base = [
+        ("Escova Secadora Profissional", 129),
+        ("Smartwatch Ultra 8", 189),
+        ("Creme Anti-Idade Premium", 97),
+        ("Cinta Modeladora Redutora", 79),
+        ("Mini Projetor Portátil", 220),
+        ("Air Fryer 4L Digital", 299),
+    ]
 
     produtos = []
 
-    items = soup.find_all("li", class_="ui-search-layout__item")
+    for nome, preco in base:
+        score = random.randint(70, 100)
 
-    for item in items[:20]:
-        try:
-            titulo = item.find("h2").text.strip()
-            preco_tag = item.find("span", class_="andes-money-amount__fraction")
+        publico = "Público geral"
 
-            if not preco_tag:
-                continue
+        if "creme" in nome.lower():
+            publico = "Mulheres 25-45 (Beleza)"
+        elif "smartwatch" in nome.lower():
+            publico = "Homens 18-35 (Tech)"
+        elif "cinta" in nome.lower():
+            publico = "Mulheres (Estética)"
+        elif "air fryer" in nome.lower():
+            publico = "Famílias / Casa"
 
-            preco = int(preco_tag.text.replace(".", ""))
-            link = item.find("a")["href"]
+        produtos.append({
+            "titulo": nome,
+            "preco": preco,
+            "link": "https://seulink.com",
+            "plataforma": "Viral Trends",
+            "score": score,
+            "publico": publico
+        })
 
-            produtos.append({
-                "titulo": titulo,
-                "preco": preco,
-                "link": link,
-                "plataforma": "Mercado Livre"
-            })
-        except:
-            continue
-
-    return produtos
-
-
-def score_viral(produto):
-    score = 0
-
-    if produto["preco"] < 150:
-        score += 30
-
-    palavras = ["oferta", "promo", "kit", "original", "frete grátis"]
-    for p in palavras:
-        if p in produto["titulo"].lower():
-            score += 20
-
-    score += random.randint(20, 50)
-
-    return score
-
-
-def detectar_publico(titulo):
-    t = titulo.lower()
-
-    if "pele" in t or "anti" in t:
-        return "Mulheres 25-45 (Beleza)"
-
-    if "smart" in t:
-        return "Homens 18-35 (Tech)"
-
-    if "cozinha" in t:
-        return "Famílias / Casa"
-
-    return "Público geral"
+    return sorted(produtos, key=lambda x: x["score"], reverse=True)
 
 
 def minerar():
-    palavras = [
-        "air fryer",
-        "smartwatch",
-        "escova secadora",
-        "creme facial",
-        "emagrecedor"
-    ]
-
-    resultados = []
-
-    for p in palavras:
-        produtos = buscar_ml(p)
-
-        if not produtos:
-            print(f"⚠️ Nada encontrado para: {p}")
-            continue
-
-        for prod in produtos:
-            score = score_viral(prod)
-
-            if score > 60:
-                resultados.append({
-                    **prod,
-                    "score": score,
-                    "publico": detectar_publico(prod["titulo"])
-                })
-
-        time.sleep(2)
-
-    return sorted(resultados, key=lambda x: x["score"], reverse=True)
+    return gerar_produtos_fake_inteligente()
