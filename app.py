@@ -1,4 +1,3 @@
-
 import streamlit as st
 from minerador import minerar
 from ia_copy import gerar_copy
@@ -8,18 +7,21 @@ st.set_page_config(layout="wide")
 st.title("🔥 LuhVee PRO - Minerador de Produtos Virais")
 
 if st.button("🚀 Minerar Produtos Agora"):
-    produtos = minerar()
+    with st.spinner("Buscando produtos virais..."):
+        produtos = minerar()
 
-    for p in produtos:
-        st.markdown(f"## 🛍️ {p['titulo']}")
-        st.write(f"💰 R$ {p['preco']}")
-        st.write(f"🔥 Score: {p['score']}")
-        st.write(f"🎯 Público: {p['publico']}")
+    if not produtos:
+        st.error("⚠️ Nenhum produto encontrado. Pode ser bloqueio ou mudança no site.")
+    else:
+        for p in produtos:
+            st.markdown(f"## 🛍️ {p['titulo']}")
+            st.write(f"💰 R$ {p['preco']}")
+            st.write(f"🔥 Score: {p['score']}")
+            st.write(f"🎯 Público: {p['publico']}")
 
-        copy = gerar_copy(p)
+            copy = gerar_copy(p)
 
-        st.text_area("📢 Copy pronta", copy, height=200)
+            st.text_area("📢 Copy pronta", copy, height=200)
 
-        st.markdown(f"[🔗 Ver Produto]({p['link']})")
-
-        st.divider()
+            st.markdown(f"[🔗 Ver Produto]({p['link']})")
+            st.divider()
