@@ -1,29 +1,38 @@
-
-import requests
+import cloudscraper
 from bs4 import BeautifulSoup
 import random
 import time
 
-headers = {
-    "User-Agent": "Mozilla/5.0"
-}
+scraper = cloudscraper.create_scraper()
 
 def buscar_ml(keyword):
     url = f"https://lista.mercadolivre.com.br/{keyword}"
-    r = requests.get(url, headers=headers)
-    soup = BeautifulSoup(r.text, "html.parser")
+
+    try:
+        r = scraper.get(url, timeout=10)
+    except:
+        return []
+
+    soup = BeautifulSoup(r.text, "lxml")
 
     produtos = []
 
-    for item in soup.select(".ui-search-result")[:15]:
+    items = soup.find_all("li", class_="ui-search-layout__item")
+
+    for item in items[:20]:
         try:
-            titulo = item.select_one(".ui-search-item__title").text
-            preco = item.select_one(".price-tag-fraction").text
+            titulo = item.find("h2").text.strip()
+            preco_tag = item.find("span", class_="andes-money-amount__fraction")
+
+            if not preco_tag:
+                continue
+
+            preco = int(preco_tag.text.replace(".", ""))
             link = item.find("a")["href"]
 
             produtos.append({
                 "titulo": titulo,
-                "preco": int(preco),
+                "preco": preco,
                 "link": link,
                 "plataforma": "Mercado Livre"
             })
@@ -36,18 +45,15 @@ def buscar_ml(keyword):
 def score_viral(produto):
     score = 0
 
-    # preço psicológico
     if produto["preco"] < 150:
         score += 30
 
-    # palavras que vendem
-    gatilhos = ["oferta", "promo", "kit", "original", "frete grátis"]
-    for g in gatilhos:
-        if g in produto["titulo"].lower():
-            score += 15
+    palavras = ["oferta", "promo", "kit", "original", "frete grátis"]
+    for p in palavras:
+        if p in produto["titulo"].lower():
+            score += 20
 
-    # aleatório (simula tendência)
-    score += random.randint(10, 40)
+    score += random.randint(20, 50)
 
     return score
 
@@ -55,31 +61,35 @@ def score_viral(produto):
 def detectar_publico(titulo):
     t = titulo.lower()
 
-    if "anti" in t or "pele" in t:
+    if "pele" in t or "anti" in t:
         return "Mulheres 25-45 (Beleza)"
 
-    if "smart" in t or "tech" in t:
-        return "Homens 18-35 (Tecnologia)"
+    if "smart" in t:
+        return "Homens 18-35 (Tech)"
 
-    if "cozinha" in t or "casa" in t:
-        return "Famílias / Donas de casa"
+    if "cozinha" in t:
+        return "Famílias / Casa"
 
     return "Público geral"
 
 
 def minerar():
     palavras = [
-        "anti idade",
-        "smartwatch",
         "air fryer",
-        "secador cabelo",
-        "produto emagrecer"
+        "smartwatch",
+        "escova secadora",
+        "creme facial",
+        "emagrecedor"
     ]
 
     resultados = []
 
     for p in palavras:
         produtos = buscar_ml(p)
+
+        if not produtos:
+            print(f"⚠️ Nada encontrado para: {p}")
+            continue
 
         for prod in produtos:
             score = score_viral(prod)
