@@ -1,26 +1,22 @@
 import random
 
-def gerar_copy(produto):
-    headlines = [
-        f"🔥 {produto['titulo']} está viralizando!",
-        f"🚨 Isso aqui tá esgotando rápido!",
-        f"😱 Todo mundo quer isso AGORA"
-    ]
+def gerar_copy(produto, link):
 
-    urgencia = [
-        "Últimas unidades",
-        "Acabando hoje",
-        "Alta demanda",
-        "Explodindo no TikTok"
+    gatilhos = [
+        "🔥 ESTOQUE ACABANDO",
+        "🚨 TODO MUNDO COMPRANDO",
+        "⚠️ ÚLTIMAS UNIDADES",
+        "💥 VIRAL NO TIKTOK"
     ]
 
     return f"""
-{random.choice(headlines)}
+{random.choice(gatilhos)}
 
-💥 {random.choice(urgencia)}
-💰 Só R$ {produto['preco']}
-🎯 Público: {produto['publico']}
+🛍️ {produto['titulo']}
 
-👉 Compre agora:
-{produto['link']}
+💰 Apenas R$ {produto['preco']}
+🎯 Ideal para: {produto['publico']}
+
+👉 GARANTA AGORA:
+{link}
 """
