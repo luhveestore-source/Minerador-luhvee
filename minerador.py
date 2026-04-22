@@ -1,42 +1,38 @@
 import random
 
-def gerar_produtos_fake_inteligente():
-    base = [
+def minerar():
+    produtos = [
         ("Escova Secadora Profissional", 129),
         ("Smartwatch Ultra 8", 189),
-        ("Creme Anti-Idade Premium", 97),
         ("Cinta Modeladora Redutora", 79),
+        ("Creme Anti Idade Premium", 97),
         ("Mini Projetor Portátil", 220),
-        ("Air Fryer 4L Digital", 299),
+        ("Air Fryer Digital 4L", 299),
     ]
 
-    produtos = []
+    lista = []
 
-    for nome, preco in base:
-        score = random.randint(70, 100)
-
-        publico = "Público geral"
-
-        if "creme" in nome.lower():
-            publico = "Mulheres 25-45 (Beleza)"
-        elif "smartwatch" in nome.lower():
-            publico = "Homens 18-35 (Tech)"
-        elif "cinta" in nome.lower():
-            publico = "Mulheres (Estética)"
-        elif "air fryer" in nome.lower():
-            publico = "Famílias / Casa"
-
-        produtos.append({
+    for nome, preco in produtos:
+        lista.append({
             "titulo": nome,
             "preco": preco,
-            "link": "https://seulink.com",
-            "plataforma": "Viral Trends",
-            "score": score,
-            "publico": publico
+            "score": random.randint(80, 100),
+            "publico": detectar_publico(nome)
         })
 
-    return sorted(produtos, key=lambda x: x["score"], reverse=True)
+    return lista
 
 
-def minerar():
-    return gerar_produtos_fake_inteligente()
+def detectar_publico(nome):
+    nome = nome.lower()
+
+    if "creme" in nome:
+        return "Mulheres 25-45"
+
+    if "smart" in nome:
+        return "Homens 18-35"
+
+    if "cinta" in nome:
+        return "Mulheres estética"
+
+    return "Público geral"
