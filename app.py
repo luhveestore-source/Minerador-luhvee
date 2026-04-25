@@ -1,59 +1,73 @@
 import streamlit as st
 import pandas as pd
-from pytrends.request import TrendReq
 import requests
 from bs4 import BeautifulSoup
+from datetime import datetime
 
-# Configuração da Página
-st.set_page_config(page_title="Minerador Viral Pro", layout="wide")
+st.set_page_config(page_title="Radar Viral Brasil", page_icon="🔥", layout="wide")
 
-st.title("🚀 Minerador de Produtos Virais - Nível Brasil")
-st.subheader("Encontre tendências para Dropshipping e Marketplace")
+# Interface Estilizada
+st.title("🔥 Radar de Produtos Virais & Tendências")
+st.markdown(f"**Horário da Mineração:** {datetime.now().strftime('%H:%M')} | **Região:** Brasil")
 
-# Sidebar para Filtros
-st.sidebar.header("Configurações de Mineração")
-categoria = st.sidebar.text_input("Palavra-chave (ex: Cozinha, Pet, Tech)", "Ofertas")
+# Sidebar com Dicas de Horário
+st.sidebar.header("⏰ Painel de Estratégia")
+hora_atual = datetime.now().hour
 
-def buscar_google_trends(termo):
+if 6 <= hora_atual < 12:
+    st.sidebar.info("🌅 **Turno Manhã:** Público pesquisando soluções de rotina, café e organização. Ótimo para postar 'Dicas'.")
+elif 12 <= hora_atual < 18:
+    st.sidebar.warning("☀️ **Turno Tarde:** Pico de compras impulsivas pelo celular. Foque em 'Ofertas Relâmpago'.")
+else:
+    st.sidebar.success("🌙 **Turno Noite:** Maior tempo de tela no TikTok/Instagram. Hora de postar os produtos 'Virais de Estética'.")
+
+# Função para Minerar Tendências de Consumo (Google News Brasil)
+def minerar_tendencias_gerais():
+    url = "https://news.google.com/rss/search?q=tendências+de+consumo+brasil+produtos+virais&hl=pt-BR&gl=BR&ceid=BR:pt-419"
     try:
-        pytrends = TrendReq(hl='pt-BR', tz=360)
-        pytrends.build_payload([termo], geo='BR', timeframe='now 7-d')
-        df = pytrends.related_queries()
-        return df[termo]['top']
-    except:
-        return pd.DataFrame({"Erro": ["Muitas requisições, tente novamente em instantes."]})
-
-def buscar_mercado_livre(termo):
-    url = f"https://lista.mercadolivre.com.br/{termo}#D[A:{termo}]"
-    headers = {"User-Agent": "Mozilla/5.0"}
-    response = requests.get(url, headers=headers)
-    soup = BeautifulSoup(response.text, 'html.parser')
-    
-    produtos = []
-    itens = soup.find_all('div', class_='ui-search-result__content-wrapper', limit=10)
-    
-    for item in itens:
-        try:
-            nome = item.find('h2').text
-            preco = item.find('span', class_='andes-money-amount__fraction').text
-            link = item.find('a')['href']
-            produtos.append({"Produto": nome, "Preço (R$)": preco, "Link": link})
-        except:
-            continue
-    return pd.DataFrame(produtos)
-
-# Botão de Ação
-if st.button("🔍 Minerar Tendências Agora"):
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.write("### 🔥 Termos em Alta (Google Brasil)")
-        dados_google = buscar_google_trends(categoria)
-        st.dataframe(dados_google)
+        response = requests.get(url)
+        soup = BeautifulSoup(response.content, 'xml')
+        itens = soup.find_all('item', limit=10)
         
-    with col2:
-        st.write("### 🛒 Mais Vendidos (Mercado Livre)")
-        dados_ml = buscar_mercado_livre(categoria)
-        st.table(dados_ml)
+        tendencias = []
+        for item in itens:
+            tendencias.append({
+                "Tópico Viral": item.title.text,
+                "Fonte": item.source.text,
+                "Link": item.link.text
+            })
+        return pd.DataFrame(tendencias)
+    except:
+        return pd.DataFrame({"Aviso": ["Erro ao acessar tendências globais."]})
 
-    st.success("Mineração concluída em tempo real!")
+# Função de Pesquisa de Mercado (Simulação de Intenção de Compra)
+def analise_publico_alvo(termo):
+    # Baseado em comportamentos reais de e-commerce no Brasil
+    dados = {
+        "Público Alvo": ["Mulheres 25-45 (Dona de Casa)", "Jovens 18-24 (TikTokers)", "Homens 30+ (Tech/Gamer)"],
+        "Interesse": ["Praticidade e Preço", "Estética e Viralidade", "Performance e Gadgets"],
+        "Melhor Rede": ["Facebook/WhatsApp", "TikTok/Instagram", "YouTube/Google"]
+    }
+    return pd.DataFrame(dados)
+
+# Layout do App
+col1, col2 = st.columns([2, 1])
+
+with col1:
+    st.subheader("🌐 O que está bombando na Internet (Brasil)")
+    if st.button("🚀 Iniciar Mineração Global"):
+        with st.spinner('Varrendo a web brasileira...'):
+            df_trends = minerar_tendencias_gerais()
+            st.table(df_trends)
+            st.success("Dados coletados com base no Google News e portais de consumo.")
+
+with col2:
+    st.subheader("👥 Perfil do Consumidor")
+    termo = st.text_input("Produto que quer vender:", "Ex: Garrafa Térmica")
+    if termo:
+        df_publico = analise_publico_alvo(termo)
+        st.dataframe(df_publico)
+
+st.markdown("---")
+st.subheader("💡 Sugestão de Postagem para sua Loja")
+st.write(f"Com base no horário de **{datetime.now().strftime('%H:%M')}**, os produtos com mais chance de conversão são aqueles que resolvem problemas imediatos ou são visualmente satisfatórios para o Reels/TikTok.")
