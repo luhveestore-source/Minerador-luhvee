@@ -1,6 +1,5 @@
 streamlit
+pandas
+pytrends
 requests
 beautifulsoup4
-pandas
-lxml
-cloudscraper
